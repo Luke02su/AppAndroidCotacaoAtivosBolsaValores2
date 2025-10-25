@@ -1,53 +1,26 @@
 package com.example.ativosbolsavalores2
 
 import android.R
-import android.R.id.bold
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Divider
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableDoubleState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -57,18 +30,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.CoroutineScope
+import androidx.compose.ui.zIndex
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
+import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.ticker
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import coil.decode.SvgDecoder
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,10 +50,102 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Data class para favoritos
+data class FavoritoItem(val ticker: String, val logoUrl: String)
+
+@Composable
+fun BoxScope.FavoritarTickerMenu(
+    ticker: String,
+    logoUrl: String,
+    favoritos: Set<FavoritoItem>,
+    menuAberto: Boolean,
+    onToggleFavorito: (Boolean) -> Unit,
+    onMenuToggle: () -> Unit,
+    onTickerSelect: (String) -> Unit
+) {
+
+    val isFavorito = favoritos.any { it.ticker == ticker }
+
+    IconButton(
+        onClick = { onToggleFavorito(!isFavorito) },
+        modifier = Modifier
+            .padding(top = 100.dp, start = 15.dp)
+            .align(Alignment.TopStart)
+    ) {
+        Icon(
+            imageVector = if (isFavorito) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+            contentDescription = if (isFavorito) "Remover dos favoritos" else "Adicionar aos favoritos",
+            tint = if (isFavorito) Color.Red else Color.Gray,
+            modifier = Modifier.size(30.dp)
+        )
+    }
+
+    IconButton(
+        onClick = { onMenuToggle() },
+        modifier = Modifier
+            .padding(top = 100.dp, end = 15.dp)
+            .align(Alignment.TopEnd)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Menu,
+            contentDescription = "Abrir favoritos",
+            tint = Color.White
+        )
+    }
+
+    AnimatedVisibility(
+        visible = menuAberto,
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .zIndex(10f), // ❌ Evita sobreposição
+        enter = slideInHorizontally(initialOffsetX = { it }),
+        exit = slideOutHorizontally(targetOffsetX = { it })
+    ) {
+        Surface(
+            modifier = Modifier
+                .width(200.dp)
+                .fillMaxHeight()
+                .padding(top = 140.dp, end = 15.dp),
+            color = Color(0xFF1B263B),
+            border = BorderStroke(1.dp, Color.White),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                if (favoritos.isEmpty()) {
+                    item {
+                        Text("Nenhum favorito", color = Color.White, modifier = Modifier.padding(16.dp))
+                    }
+                } else {
+                    items(favoritos.toList()) { item ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onTickerSelect(item.ticker) }
+                                .padding(horizontal = 8.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(item.logoUrl)
+                                    .decoderFactory(SvgDecoder.Factory())
+                                    .build(),
+                                contentDescription = "Logo ${item.ticker}",
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(text = item.ticker, color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun HomeScreen() {
     var shortName by remember { mutableStateOf("") }
-    var currency by remember { mutableStateOf("moeda") }
+    var currency by remember { mutableStateOf("") }
     var marketPrice by remember { mutableStateOf("") }
     var marketPreviousClose by remember { mutableStateOf("") }
     var marketChange by remember { mutableStateOf(" ") }
@@ -95,28 +157,18 @@ fun HomeScreen() {
     var ticker by remember { mutableStateOf("PETR4") }
     var token by remember { mutableStateOf("fVvtN4WFtkrPTVerbUHG9F") }
 
+    var favoritos by remember { mutableStateOf(setOf<FavoritoItem>()) }
+    var menuAberto by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
 
     LaunchedEffect(ticker, token) {
-        if (ticker.isBlank()) {
-            shortName = "0"
-            currency = "moeda"
-            marketPrice = " "
-            marketPreviousClose = " "
-            marketChange = " "
-            marketChangePercent = "0"
-            dayRange = "0"
-            fiftyTwoWeekRange = "0"
-            logoUrl = " "
-            return@LaunchedEffect
-        }
         withContext(Dispatchers.IO) {
             try {
                 val url = URL("https://brapi.dev/api/quote/$ticker?token=$token")
                 val conn = url.openConnection() as HttpsURLConnection
                 conn.requestMethod = "GET"
                 conn.connect()
-
                 val response = conn.inputStream.bufferedReader().use { it.readText() }
                 val json = JSONObject(response)
                 val ativo = json.getJSONArray("results").getJSONObject(0)
@@ -125,26 +177,21 @@ fun HomeScreen() {
                 currency = ativo.optString("currency", "moeda")
                 marketPrice = ativo.optString("regularMarketPrice", "")
                 marketPreviousClose = ativo.optString("regularMarketPreviousClose", "")
-                marketChange = ativo.optString(
-                    "regularMarketChange",
-                    " "
-                ) // Espaço para não quebrar a lógica de cor
+                marketChange = ativo.optString("regularMarketChange", " ")
                 marketChangePercent = ativo.optString("regularMarketChangePercent", "")
                 dayRange = ativo.optString("regularMarketDayRange", "")
                 fiftyTwoWeekRange = ativo.optString("fiftyTwoWeekRange", "")
                 logoUrl = ativo.optString("logourl", "")
             } catch (e: Exception) {
-                //Toast.makeText(context, "Erro ao puxar ", Toast.LENGTH_SHORT).show()
                 e.printStackTrace()
             }
         }
     }
 
-    // Column Principal (Ocupa a tela inteira e alinha tudo ao Centro)
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color(0xFF1B263B)),
+            .background(Color(0xFF1B263B)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -159,58 +206,44 @@ fun HomeScreen() {
             "Intervalo de 52 semanas ($currency)" to fiftyTwoWeekRange
         )
 
-        // Column que estava centralizada
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = Color(0xFF1B263B))
+                .background(Color(0xFF1B263B))
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-
-            // BOX PRINCIPAL (AGORA COM TODOS OS ELEMENTOS DE SOBREPOSIÇÃO)
             Box(
                 modifier = Modifier
-                    .fillMaxWidth() // Preenche a largura para centralizar o conteúdo
-                    .weight(1f), // Dá ao Box o espaço restante (acima do Surface)
-                contentAlignment = Alignment.TopCenter // Alinha a maioria do conteúdo ao centro (padrão do Box)
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.TopCenter
             ) {
 
-                // 1. IconButton (Posicionado no TopStart - Canto Superior Esquerdo)
-                IconButton(
-                    onClick = { /* ... */ },
-                    // Usamos .align(Alignment.TopStart) para forçar o canto
-                    modifier = Modifier
-                        .padding(top = 100.dp, start = 15.dp)
-                        .align(Alignment.TopStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = "Favoritar ativo",
-                        tint = Color.White
-                    )
-                }
+                FavoritarTickerMenu(
+                    ticker = ticker,
+                    logoUrl = logoUrl,
+                    favoritos = favoritos,
+                    menuAberto = menuAberto,
+                    onToggleFavorito = { adicionar ->
+                        favoritos = if (adicionar) {
+                            favoritos + FavoritoItem(ticker, logoUrl)
+                        } else {
+                            favoritos.filterNot { it.ticker == ticker }.toSet()
+                        }
+                    },
+                    onMenuToggle = { menuAberto = !menuAberto },
+                    onTickerSelect = { tickerSelecionado ->
+                        ticker = tickerSelecionado
+                        menuAberto = false
+                    }
+                )
 
-                IconButton(
-                    onClick = { /* ... */ },
-                    // Usamos .align(Alignment.TopStart) para forçar o canto
-                    modifier = Modifier
-                        .padding(top = 100.dp, end = 15.dp)
-                        .align(Alignment.TopEnd)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = "Lista de ativos favoritos",
-                        tint = Color.White
-                    )
-                }
-
-                // 2. Imagem e Campo de Texto (Centralizados no Box)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .align(Alignment.Center), // Alinha este Column no centro do Box
+                        .align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -220,8 +253,7 @@ fun HomeScreen() {
                             .decoderFactory(SvgDecoder.Factory())
                             .build(),
                         contentDescription = "Logo do ativo.",
-                        modifier = Modifier
-                            .width(180.dp)
+                        modifier = Modifier.width(180.dp)
                     )
                     OutlinedTextField(
                         value = ticker,
@@ -229,7 +261,7 @@ fun HomeScreen() {
                         label = { Text("Digite o ticker") },
                         modifier = Modifier
                             .width(180.dp)
-                            .background(color = Color.White),
+                            .background(Color.White),
                         shape = RoundedCornerShape(4.dp),
                         textStyle = TextStyle(
                             color = Color(0xFF212121),
@@ -239,17 +271,14 @@ fun HomeScreen() {
                         )
                     )
                 }
-            } // Fim do Box principal
+            }
 
-            // Bloco Surface original (mantido abaixo do Box)
             Surface(
                 color = Color(0xFF331976D2),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     campos.forEach { (label, valor) ->
                         Surface(
                             color = Color(0xFFBDBDBD),
