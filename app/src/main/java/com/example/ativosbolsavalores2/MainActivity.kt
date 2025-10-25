@@ -1,6 +1,5 @@
 package com.example.ativosbolsavalores2
 
-import android.R
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,9 +11,12 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Menu
@@ -50,13 +52,13 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Data class para favoritos
-data class FavoritoItem(val ticker: String, val logoUrl: String)
+data class FavoritoItem(val ticker: String, val logoUrl: String, val marketPrice: String)
 
 @Composable
 fun BoxScope.FavoritarTickerMenu(
     ticker: String,
     logoUrl: String,
+    marketPrice: String,
     favoritos: Set<FavoritoItem>,
     menuAberto: Boolean,
     onToggleFavorito: (Boolean) -> Unit,
@@ -69,7 +71,7 @@ fun BoxScope.FavoritarTickerMenu(
     IconButton(
         onClick = { onToggleFavorito(!isFavorito) },
         modifier = Modifier
-            .padding(top = 100.dp, start = 15.dp)
+            .padding(top = 70.dp, start = 0.dp)
             .align(Alignment.TopStart)
     ) {
         Icon(
@@ -83,12 +85,12 @@ fun BoxScope.FavoritarTickerMenu(
     IconButton(
         onClick = { onMenuToggle() },
         modifier = Modifier
-            .padding(top = 100.dp, end = 15.dp)
+            .padding(top = 70.dp, end = 0.dp)
             .align(Alignment.TopEnd)
     ) {
         Icon(
             imageVector = Icons.Default.Menu,
-            contentDescription = "Abrir favoritos",
+            contentDescription = "Abrir ativos favoritados.",
             tint = Color.White
         )
     }
@@ -97,23 +99,23 @@ fun BoxScope.FavoritarTickerMenu(
         visible = menuAberto,
         modifier = Modifier
             .align(Alignment.TopEnd)
-            .zIndex(10f), // ❌ Evita sobreposição
+            .zIndex(10f),
         enter = slideInHorizontally(initialOffsetX = { it }),
         exit = slideOutHorizontally(targetOffsetX = { it })
     ) {
         Surface(
             modifier = Modifier
-                .width(200.dp)
+                .width(400.dp)
                 .fillMaxHeight()
-                .padding(top = 140.dp, end = 15.dp),
+                .padding(top = 300.dp),
             color = Color(0xFF1B263B),
             border = BorderStroke(1.dp, Color.White),
             shape = RoundedCornerShape(8.dp)
         ) {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(modifier = Modifier.fillMaxWidth().height(400.dp)) {
                 if (favoritos.isEmpty()) {
                     item {
-                        Text("Nenhum favorito", color = Color.White, modifier = Modifier.padding(16.dp))
+                        Text("Clique no ícone ♡ para favoritar um ativo.", color = Color.White, modifier = Modifier.padding(16.dp))
                     }
                 } else {
                     items(favoritos.toList()) { item ->
@@ -134,6 +136,8 @@ fun BoxScope.FavoritarTickerMenu(
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(text = item.ticker, color = Color.White, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.width(8.dp))
+                            Text(text = item.marketPrice, color = Color.White, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -145,7 +149,7 @@ fun BoxScope.FavoritarTickerMenu(
 @Composable
 fun HomeScreen() {
     var shortName by remember { mutableStateOf("") }
-    var currency by remember { mutableStateOf("") }
+    var currency by remember { mutableStateOf("moeda") }
     var marketPrice by remember { mutableStateOf("") }
     var marketPreviousClose by remember { mutableStateOf("") }
     var marketChange by remember { mutableStateOf(" ") }
@@ -154,11 +158,13 @@ fun HomeScreen() {
     var fiftyTwoWeekRange by remember { mutableStateOf("") }
     var logoUrl by remember { mutableStateOf("") }
 
-    var ticker by remember { mutableStateOf("PETR4") }
+    var ticker by remember { mutableStateOf("BOVA11") }
     var token by remember { mutableStateOf("fVvtN4WFtkrPTVerbUHG9F") }
 
     var favoritos by remember { mutableStateOf(setOf<FavoritoItem>()) }
     var menuAberto by remember { mutableStateOf(false) }
+
+    var scrollState = rememberScrollState()
 
     val context = LocalContext.current
 
@@ -173,130 +179,164 @@ fun HomeScreen() {
                 val json = JSONObject(response)
                 val ativo = json.getJSONArray("results").getJSONObject(0)
 
-                shortName = ativo.optString("shortName", "")
-                currency = ativo.optString("currency", "moeda")
-                marketPrice = ativo.optString("regularMarketPrice", "")
-                marketPreviousClose = ativo.optString("regularMarketPreviousClose", "")
-                marketChange = ativo.optString("regularMarketChange", " ")
-                marketChangePercent = ativo.optString("regularMarketChangePercent", "")
-                dayRange = ativo.optString("regularMarketDayRange", "")
-                fiftyTwoWeekRange = ativo.optString("fiftyTwoWeekRange", "")
-                logoUrl = ativo.optString("logourl", "")
+                shortName = ativo.optString("shortName")
+                currency = ativo.optString("currency")
+                marketPrice = ativo.optString("regularMarketPrice")
+                marketPreviousClose = ativo.optString("regularMarketPreviousClose")
+                marketChange = ativo.optString("regularMarketChange")
+                marketChangePercent = ativo.optString("regularMarketChangePercent")
+                dayRange = ativo.optString("regularMarketDayRange")
+                fiftyTwoWeekRange = ativo.optString("fiftyTwoWeekRange")
+                logoUrl = ativo.optString("logourl")
+
+                menuAberto = false
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF1B263B)),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        val campos = listOf(
-            "Nome curto" to shortName,
-            "Moeda" to currency,
-            "Preço atual" to marketPrice,
-            "Fechamento anterior ($currency)" to marketPreviousClose,
-            "Variação do dia ($currency)" to marketChange,
-            "Variação do dia (%)" to marketChangePercent,
-            "Intervalo do dia ($currency)" to dayRange,
-            "Intervalo de 52 semanas ($currency)" to fiftyTwoWeekRange
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF1B263B))
-                .padding(16.dp),
+                .verticalScroll(scrollState)
+                .padding(top = 30.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
-            Box(
+            val campos = listOf(
+                "Nome curto" to shortName,
+                "Moeda" to currency,
+                "Preço atual" to marketPrice,
+                "Fechamento anterior ($currency)" to marketPreviousClose,
+                "Variação do dia ($currency)" to marketChange,
+                "Variação do dia (%)" to marketChangePercent,
+                "Intervalo do dia ($currency)" to dayRange,
+                "Intervalo de 52 semanas ($currency)" to fiftyTwoWeekRange
+            )
+
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.TopCenter
+                    .fillMaxSize()
+                    .padding(40.dp)
+                    .padding(top = 20.dp)
+                    .background(Color(0xFF1B263B)),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
             ) {
-
-                FavoritarTickerMenu(
-                    ticker = ticker,
-                    logoUrl = logoUrl,
-                    favoritos = favoritos,
-                    menuAberto = menuAberto,
-                    onToggleFavorito = { adicionar ->
-                        favoritos = if (adicionar) {
-                            favoritos + FavoritoItem(ticker, logoUrl)
-                        } else {
-                            favoritos.filterNot { it.ticker == ticker }.toSet()
-                        }
-                    },
-                    onMenuToggle = { menuAberto = !menuAberto },
-                    onTickerSelect = { tickerSelecionado ->
-                        ticker = tickerSelecionado
-                        menuAberto = false
-                    }
-                )
-
-                Column(
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.TopCenter
                 ) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(logoUrl)
-                            .decoderFactory(SvgDecoder.Factory())
-                            .build(),
-                        contentDescription = "Logo do ativo.",
-                        modifier = Modifier.width(180.dp)
-                    )
-                    OutlinedTextField(
-                        value = ticker,
-                        onValueChange = { ticker = it },
-                        label = { Text("Digite o ticker") },
-                        modifier = Modifier
-                            .width(180.dp)
-                            .background(Color.White),
-                        shape = RoundedCornerShape(4.dp),
-                        textStyle = TextStyle(
-                            color = Color(0xFF212121),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                    )
-                }
-            }
 
-            Surface(
-                color = Color(0xFF331976D2),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    campos.forEach { (label, valor) ->
-                        Surface(
-                            color = Color(0xFFBDBDBD),
-                            border = BorderStroke(2.dp, Color.White),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp)
+                    FavoritarTickerMenu(
+                        ticker = ticker,
+                        logoUrl = logoUrl,
+                        marketPrice = marketPrice,
+                        favoritos = favoritos,
+                        menuAberto = menuAberto,
+                        onToggleFavorito = { adicionar ->
+                            favoritos = if (adicionar) {
+                                favoritos + FavoritoItem(ticker, logoUrl, "R$" + marketPrice)
+                            } else {
+                                favoritos.filterNot { it.ticker == ticker }.toSet()
+                            }
+                        },
+                        onMenuToggle = { menuAberto = !menuAberto },
+                        onTickerSelect = { tickerSelecionado ->
+                            ticker = tickerSelecionado
+                            menuAberto = false
+                        }
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.TopCenter),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Top
+                    ) {
+                        Surface (
+                            shape = RoundedCornerShape(4.dp),
+                            border = BorderStroke(4.dp, Color(0xFF331976D2))
                         ) {
-                            Text(
-                                text = "$label: $valor",
-                                color = if ((label == "Variação do dia ($currency)" || label == "Variação do dia (%)") && valor > "0.00") Color(
-                                    0xFF2E7D32
-                                ) else Color(0xFFC62828),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(8.dp)
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(logoUrl)
+                                    .decoderFactory(SvgDecoder.Factory())
+                                    .build(),
+                                contentDescription = "Logo do ativo.",
+                                modifier = Modifier.width(180.dp).height(180.dp).background(Color(0xFF1B263B))
                             )
+                        }
+
+                        Spacer(modifier = Modifier.height(30.dp))
+
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            border = BorderStroke(4.dp, Color(0xFF331976D2))
+                        ) {
+                            OutlinedTextField(
+                                value = ticker,
+                                onValueChange = { ticker = it.uppercase() },
+                                placeholder = {
+                                    Text(
+                                        text = "Digite o ticker",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        style = TextStyle(
+                                            color = Color(0xFF212121),
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    )
+                                },
+                                modifier = Modifier
+                                    .width(180.dp)
+                                    .background(Color.White),
+                                shape = RoundedCornerShape(4.dp),
+                                textStyle = TextStyle(
+                                    color = Color.Black,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+
+                                    )
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(30.dp))
+                    }
+                }
+
+                if (!menuAberto) {
+
+                Surface(
+                    color = Color(0xFF331976D2),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(8.dp)) {
+                        campos.forEach { (label, valor) ->
+                            Surface(
+                                color = Color(0xFFBDBDBD),
+                                border = BorderStroke(2.dp, Color.White),
+                                shape = RoundedCornerShape(4.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(6.dp)
+                            ) {
+                                Text(
+                                    text = "$label: $valor",
+                                    color = if ((label == "Variação do dia ($currency)" || label == "Variação do dia (%)") && valor > "0.00") Color(
+                                        0xFF2E7D32
+                                    ) else Color(0xFFC62828),
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                            }
                         }
                     }
                 }
