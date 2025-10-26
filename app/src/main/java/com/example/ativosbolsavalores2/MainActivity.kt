@@ -200,128 +200,128 @@ fun HomeScreen() {
         }
     }
 
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF1B263B))
+            .verticalScroll(scrollState)
+            .padding(top = 30.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+    ) {
+        val campos = listOf(
+            "Nome curto" to shortName,
+            "Moeda" to currency,
+            "Preço atual" to marketPrice,
+            "Fechamento anterior ($currency)" to marketPreviousClose,
+            "Variação do dia ($currency)" to marketChange,
+            "Variação do dia (%)" to marketChangePercent,
+            "Intervalo do dia ($currency)" to dayRange,
+            "Intervalo de 52 semanas ($currency)" to fiftyTwoWeekRange
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF1B263B))
-                .verticalScroll(scrollState),
+                .padding(40.dp)
+                .background(Color(0xFF1B263B)),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            val campos = listOf(
-                "Nome curto" to shortName,
-                "Moeda" to currency,
-                "Preço atual" to marketPrice,
-                "Fechamento anterior ($currency)" to marketPreviousClose,
-                "Variação do dia ($currency)" to marketChange,
-                "Variação do dia (%)" to marketChangePercent,
-                "Intervalo do dia ($currency)" to dayRange,
-                "Intervalo de 52 semanas ($currency)" to fiftyTwoWeekRange
-            )
-
-            Column(
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(40.dp)
-                    .background(Color(0xFF1B263B)),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.TopCenter
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.TopCenter
-                ) {
 
-                    FavoritarTickerMenu(
-                        ticker = ticker,
-                        logoUrl = logoUrl,
-                        marketPrice = marketPrice,
-                        favoritos = favoritos,
-                        menuAberto = menuAberto,
-                        onToggleFavorito = { adicionar ->
-                            favoritos = if (adicionar) {
-                                favoritos + FavoritoItem(ticker, logoUrl, "R$" + marketPrice)
-                            } else {
-                                favoritos.filterNot { it.ticker == ticker }.toSet()
-                            }
-                        },
-                        onMenuToggle = { menuAberto = !menuAberto },
-                        onTickerSelect = { tickerSelecionado ->
-                            ticker = tickerSelecionado
-                            menuAberto = false
+                FavoritarTickerMenu(
+                    ticker = ticker,
+                    logoUrl = logoUrl,
+                    marketPrice = marketPrice,
+                    favoritos = favoritos,
+                    menuAberto = menuAberto,
+                    onToggleFavorito = { adicionar ->
+                        favoritos = if (adicionar) {
+                            favoritos + FavoritoItem(ticker, logoUrl, "R$" + marketPrice)
+                        } else {
+                            favoritos.filterNot { it.ticker == ticker }.toSet()
                         }
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.TopCenter),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Top
-                    ) {
-                        Surface (
-                            shape = RoundedCornerShape(4.dp),
-                            border = BorderStroke(4.dp, Color(0xFF331976D2))
-                        ) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(logoUrl)
-                                    .decoderFactory(SvgDecoder.Factory())
-                                    .build(),
-                                contentDescription = "Logo do ativo.",
-                                modifier = Modifier.width(180.dp).height(180.dp).background(Color(0xFF1B263B)).padding(4.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(30.dp))
-
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            border = BorderStroke(4.dp, Color(0xFF331976D2))
-                        ) {
-                            val maxLength = 6
-                            OutlinedTextField(
-                                value = ticker,
-                                onValueChange = {
-                                    if (it.length <= 6) {
-                                        ticker = it.uppercase()
-                                    }
-                                },
-                                placeholder = {
-                                    Text(
-                                        text = "Digite o ticker",
-                                        modifier = Modifier.fillMaxWidth(),
-                                        style = TextStyle(
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            textAlign = TextAlign.Center
-                                        )
-                                    )
-                                },
-                                colors  = OutlinedTextFieldDefaults.colors (
-                                    focusedPlaceholderColor = Color(0xFF331976D2),
-                                ),
-
-                                modifier = Modifier
-                                    .width(180.dp)
-                                    .background(Color.White),
-                                shape = RoundedCornerShape(4.dp),
-                                textStyle = TextStyle(
-                                    color = Color.Black,
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
-                                ),
-                                singleLine = true
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(30.dp))
+                    },
+                    onMenuToggle = { menuAberto = !menuAberto },
+                    onTickerSelect = { tickerSelecionado ->
+                        ticker = tickerSelecionado
+                        menuAberto = false
                     }
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    Surface (
+                        shape = RoundedCornerShape(4.dp),
+                        border = BorderStroke(4.dp, Color(0xFF331976D2))
+                    ) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(logoUrl)
+                                .decoderFactory(SvgDecoder.Factory())
+                                .build(),
+                            contentDescription = "Logo do ativo.",
+                            modifier = Modifier.width(180.dp).height(180.dp).background(Color(0xFF1B263B)).padding(4.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(30.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        border = BorderStroke(4.dp, Color(0xFF331976D2))
+                    ) {
+                        val maxLength = 6
+                        OutlinedTextField(
+                            value = ticker,
+                            onValueChange = {
+                                if (it.length <= 6) {
+                                    ticker = it.uppercase()
+                                }
+                            },
+                            placeholder = {
+                                Text(
+                                    text = "Digite o ticker",
+                                    modifier = Modifier.fillMaxWidth(),
+                                    style = TextStyle(
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.Center
+                                    )
+                                )
+                            },
+                            colors  = OutlinedTextFieldDefaults.colors (
+                                focusedPlaceholderColor = Color(0xFF331976D2),
+                            ),
+
+                            modifier = Modifier
+                                .width(180.dp)
+                                .background(Color.White),
+                            shape = RoundedCornerShape(4.dp),
+                            textStyle = TextStyle(
+                                color = Color.Black,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            ),
+                            singleLine = true
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(30.dp))
                 }
+            }
 
-                if (!menuAberto) {
-
+            if (!menuAberto) {
                 Surface(
                     color = Color(0xFF331976D2),
                     shape = RoundedCornerShape(12.dp),
@@ -335,7 +335,7 @@ fun HomeScreen() {
                                 shape = RoundedCornerShape(4.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(6.dp)
+                                    .padding(8.dp)
                             ) {
                                 Text(
                                     text = "$label: $valor",
