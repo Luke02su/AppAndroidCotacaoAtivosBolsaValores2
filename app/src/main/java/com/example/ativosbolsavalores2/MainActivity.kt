@@ -1,6 +1,7 @@
 package com.example.ativosbolsavalores2
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -41,6 +42,9 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,14 +109,13 @@ fun BoxScope.FavoritarTickerMenu(
     ) {
         Surface(
             modifier = Modifier
-                .width(400.dp)
-                .fillMaxHeight()
+                .fillMaxSize()
                 .padding(top = 300.dp),
             color = Color(0xFF1B263B),
             border = BorderStroke(1.dp, Color.White),
             shape = RoundedCornerShape(8.dp)
         ) {
-            LazyColumn(modifier = Modifier.fillMaxWidth().height(400.dp)) {
+            LazyColumn(modifier = Modifier.fillMaxWidth().height(380.dp)) {
                 if (favoritos.isEmpty()) {
                     item {
                         Text("Clique no ícone ♡ para favoritar um ativo.", color = Color.White, modifier = Modifier.padding(16.dp))
@@ -191,6 +194,7 @@ fun HomeScreen() {
 
                 menuAberto = false
             } catch (e: Exception) {
+                // Toast.makeText(context, "Erro ao buscar ativo. Verifique sua conexão e tente novamente.", Toast.LENGTH_SHORT).show()
                 e.printStackTrace()
             }
         }
@@ -200,8 +204,7 @@ fun HomeScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF1B263B))
-                .verticalScroll(scrollState)
-                .padding(top = 30.dp),
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
@@ -220,7 +223,6 @@ fun HomeScreen() {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(40.dp)
-                    .padding(top = 20.dp)
                     .background(Color(0xFF1B263B)),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
@@ -268,7 +270,7 @@ fun HomeScreen() {
                                     .decoderFactory(SvgDecoder.Factory())
                                     .build(),
                                 contentDescription = "Logo do ativo.",
-                                modifier = Modifier.width(180.dp).height(180.dp).background(Color(0xFF1B263B))
+                                modifier = Modifier.width(180.dp).height(180.dp).background(Color(0xFF1B263B)).padding(4.dp)
                             )
                         }
 
@@ -278,21 +280,29 @@ fun HomeScreen() {
                             shape = RoundedCornerShape(4.dp),
                             border = BorderStroke(4.dp, Color(0xFF331976D2))
                         ) {
+                            val maxLength = 6
                             OutlinedTextField(
                                 value = ticker,
-                                onValueChange = { ticker = it.uppercase() },
+                                onValueChange = {
+                                    if (it.length <= 6) {
+                                        ticker = it.uppercase()
+                                    }
+                                },
                                 placeholder = {
                                     Text(
                                         text = "Digite o ticker",
                                         modifier = Modifier.fillMaxWidth(),
                                         style = TextStyle(
-                                            color = Color(0xFF212121),
                                             fontSize = 16.sp,
                                             fontWeight = FontWeight.Bold,
                                             textAlign = TextAlign.Center
                                         )
                                     )
                                 },
+                                colors  = OutlinedTextFieldDefaults.colors (
+                                    focusedPlaceholderColor = Color(0xFF331976D2),
+                                ),
+
                                 modifier = Modifier
                                     .width(180.dp)
                                     .background(Color.White),
@@ -301,9 +311,9 @@ fun HomeScreen() {
                                     color = Color.Black,
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center,
-
-                                    )
+                                    textAlign = TextAlign.Center
+                                ),
+                                singleLine = true
                             )
                         }
                         Spacer(modifier = Modifier.height(30.dp))
@@ -329,9 +339,13 @@ fun HomeScreen() {
                             ) {
                                 Text(
                                     text = "$label: $valor",
-                                    color = if ((label == "Variação do dia ($currency)" || label == "Variação do dia (%)") && valor > "0.00") Color(
-                                        0xFF2E7D32
-                                    ) else Color(0xFFC62828),
+                                    color = if ((label == "Variação do dia ($currency)" || label == "Variação do dia (%)") && valor > "0.00") {
+                                                Color(0xFF2E7D32)
+                                            } else if ((label == "Variação do dia ($currency)" || label == "Variação do dia (%)") && valor < "0.00") {
+                                                Color(0xFFC62828)
+                                            } else {
+                                                Color.Black
+                                            },
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(8.dp)
