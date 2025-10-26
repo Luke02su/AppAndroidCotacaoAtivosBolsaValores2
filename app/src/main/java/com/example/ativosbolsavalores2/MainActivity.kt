@@ -182,15 +182,15 @@ fun HomeScreen() {
                 val json = JSONObject(response)
                 val ativo = json.getJSONArray("results").getJSONObject(0)
 
-                shortName = ativo.optString("shortName")
-                currency = ativo.optString("currency")
-                marketPrice = ativo.optString("regularMarketPrice")
-                marketPreviousClose = ativo.optString("regularMarketPreviousClose")
-                marketChange = ativo.optString("regularMarketChange")
-                marketChangePercent = ativo.optString("regularMarketChangePercent")
-                dayRange = ativo.optString("regularMarketDayRange")
-                fiftyTwoWeekRange = ativo.optString("fiftyTwoWeekRange")
-                logoUrl = ativo.optString("logourl")
+                shortName = ativo.optString("shortName", shortName)
+                currency = ativo.optString("currency", currency)
+                marketPrice = ativo.optString("regularMarketPrice", marketPrice)
+                marketPreviousClose = ativo.optString("regularMarketPreviousClose", marketPreviousClose)
+                marketChange = ativo.optString("regularMarketChange", marketChange)
+                marketChangePercent = ativo.optString("regularMarketChangePercent", marketChangePercent)
+                dayRange = ativo.optString("regularMarketDayRange", dayRange)
+                fiftyTwoWeekRange = ativo.optString("fiftyTwoWeekRange", fiftyTwoWeekRange)
+                logoUrl = ativo.optString("logourl", logoUrl)
 
                 menuAberto = false
             } catch (e: Exception) {
