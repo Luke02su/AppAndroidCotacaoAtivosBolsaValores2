@@ -233,6 +233,34 @@ fun HomeScreen() {
         favoritos = carregarFavoritos(context)
     }
 
+    LaunchedEffect(favoritos) {
+        withContext(Dispatchers.IO) {
+            val atualizados = favoritos.map { item ->
+                try {
+                    val url = URL("https://brapi.dev/api/quote/${item.ticker}?token=$token")
+                    val conn = url.openConnection() as HttpsURLConnection
+                    conn.requestMethod = "GET"
+                    conn.connect()
+                    val response = conn.inputStream.bufferedReader().use { it.readText() }
+                    val json = JSONObject(response)
+                    val ativo = json.getJSONArray("results").getJSONObject(0)
+                    val novoPreco = ativo.optString("regularMarketPrice", item.marketPrice)
+
+                    item.copy(marketPrice = novoPreco)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    item
+                }
+            }.toSet()
+
+            withContext(Dispatchers.Main) {
+                favoritos = atualizados
+                salvarFavoritos(context, favoritos)
+            }
+        }
+    }
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
