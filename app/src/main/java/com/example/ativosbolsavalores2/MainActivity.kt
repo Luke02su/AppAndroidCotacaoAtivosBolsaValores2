@@ -1,5 +1,6 @@
 package com.example.ativosbolsavalores2
 
+import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -21,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.materialIcon
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -44,6 +46,8 @@ import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 
 class MainActivity : ComponentActivity() {
@@ -56,12 +60,35 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-data class FavoritoItem(val ticker: String, val logoUrl: String, val marketPrice: String)
+fun salvarFavoritos(context: Context, favoritos: Set<FavoritoItem>) {
+    val sharedPref = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+    val editor = sharedPref.edit()
+    val gson = Gson()
+    val json = gson.toJson(favoritos.toList())
+    editor.putString("favoritos", json)
+    editor.apply()
+}
+
+fun carregarFavoritos(context: Context): Set<FavoritoItem> {
+    val sharedPref = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+    val gson = Gson()
+    val json = sharedPref.getString("favoritos", null)
+    return if (json != null) {
+        val type = object : TypeToken<List<FavoritoItem>>() {}.type
+        val lista = gson.fromJson<List<FavoritoItem>>(json, type)
+        lista.toSet()
+    } else {
+        emptySet()
+    }
+}
+
+data class FavoritoItem(val ticker: String, val logoUrl: String, val currency: String, val marketPrice: String)
 
 @Composable
 fun BoxScope.FavoritarTickerMenu(
     ticker: String,
     logoUrl: String,
+    currency: String,
     marketPrice: String,
     favoritos: Set<FavoritoItem>,
     menuAberto: Boolean,
@@ -115,7 +142,7 @@ fun BoxScope.FavoritarTickerMenu(
             border = BorderStroke(1.dp, Color.White),
             shape = RoundedCornerShape(8.dp)
         ) {
-            LazyColumn(modifier = Modifier.fillMaxWidth().height(380.dp)) {
+            LazyColumn(modifier = Modifier.fillMaxWidth().height(400.dp)) {
                 if (favoritos.isEmpty()) {
                     item {
                         Text("Clique no ícone ♡ para favoritar um ativo.", color = Color.White, modifier = Modifier.padding(16.dp))
@@ -128,6 +155,8 @@ fun BoxScope.FavoritarTickerMenu(
                                 .clickable { onTickerSelect(item.ticker) }
                                 .padding(horizontal = 8.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
+                        ) { Surface (
+                            shape = RoundedCornerShape(4.dp),
                         ) {
                             AsyncImage(
                                 model = ImageRequest.Builder(LocalContext.current)
@@ -135,12 +164,13 @@ fun BoxScope.FavoritarTickerMenu(
                                     .decoderFactory(SvgDecoder.Factory())
                                     .build(),
                                 contentDescription = "Logo ${item.ticker}",
-                                modifier = Modifier.size(32.dp)
+                                modifier = Modifier.size(32.dp),
                             )
-                            Spacer(Modifier.width(8.dp))
-                            Text(text = item.ticker, color = Color.White, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.width(8.dp))
-                            Text(text = item.marketPrice, color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        Text(text = item.ticker, color = Color.White, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.width(8.dp))
+                        Text(text = item.currency + " " + item.marketPrice, color = Color.White, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -194,10 +224,13 @@ fun HomeScreen() {
 
                 menuAberto = false
             } catch (e: Exception) {
-                // Toast.makeText(context, "Erro ao buscar ativo. Verifique sua conexão e tente novamente.", Toast.LENGTH_SHORT).show()
                 e.printStackTrace()
             }
         }
+    }
+
+    LaunchedEffect(Unit) {
+        favoritos = carregarFavoritos(context)
     }
 
     Column(
@@ -205,15 +238,15 @@ fun HomeScreen() {
             .fillMaxSize()
             .background(Color(0xFF1B263B))
             .verticalScroll(scrollState)
-            .padding(top = 30.dp),
+            .padding(top = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
         val campos = listOf(
             "Nome curto" to shortName,
             "Moeda" to currency,
-            "Preço atual" to marketPrice,
-            "Fechamento anterior ($currency)" to marketPreviousClose,
+            "Preço atual" to currency  + " " + marketPrice,
+            "Fechamento anterior" to currency  + " " + marketPreviousClose,
             "Variação do dia ($currency)" to marketChange,
             "Variação do dia (%)" to marketChangePercent,
             "Intervalo do dia ($currency)" to dayRange,
@@ -237,15 +270,17 @@ fun HomeScreen() {
                 FavoritarTickerMenu(
                     ticker = ticker,
                     logoUrl = logoUrl,
+                    currency = currency,
                     marketPrice = marketPrice,
                     favoritos = favoritos,
                     menuAberto = menuAberto,
                     onToggleFavorito = { adicionar ->
                         favoritos = if (adicionar) {
-                            favoritos + FavoritoItem(ticker, logoUrl, "R$" + marketPrice)
+                            favoritos + FavoritoItem(ticker, logoUrl, currency, marketPrice)
                         } else {
                             favoritos.filterNot { it.ticker == ticker }.toSet()
                         }
+                        salvarFavoritos(context, favoritos)
                     },
                     onMenuToggle = { menuAberto = !menuAberto },
                     onTickerSelect = { tickerSelecionado ->
@@ -327,7 +362,7 @@ fun HomeScreen() {
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(8.dp)) {
+                    Column(modifier = Modifier.padding(10.dp)) {
                         campos.forEach { (label, valor) ->
                             Surface(
                                 color = Color(0xFFBDBDBD),
@@ -335,7 +370,7 @@ fun HomeScreen() {
                                 shape = RoundedCornerShape(4.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(8.dp)
+                                    .padding(6.dp)
                             ) {
                                 Text(
                                     text = "$label: $valor",
@@ -348,7 +383,7 @@ fun HomeScreen() {
                                             },
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(8.dp)
+                                    modifier = Modifier.padding(10.dp)
                                 )
                             }
                         }
