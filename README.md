@@ -1,4 +1,4 @@
-# Cotações de Ativos da Bolsa de Valores 📈💰  
+# Cotações de Ativos da Bolsa de Valores 2.0 📈💰  
 
 [![Kotlin](https://img.shields.io/badge/Linguagem-Kotlin-orange?logo=kotlin)](https://kotlinlang.org/)  
 [![Android Studio](https://img.shields.io/badge/IDE-Android_Studio-brightgreen?logo=android-studio)](https://developer.android.com/studio)  
@@ -103,7 +103,7 @@ Este aplicativo foi feito a partir de uma **engenharia reversa e complementar** 
 
 ## 👨‍💻 Autor
 **Lucas Samuel Dias**  
-- Desenvolvedor Kotlin Android  
+- Desenvolvedor Kotlin Android 
 - Focado em integração de APIs, UI/UX e aplicativos financeiros  
 
 ---
