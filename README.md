@@ -41,8 +41,8 @@ Este aplicativo foi feito a partir de uma **engenharia reversa e complementar** 
 
 <p align="center">
    <img width="300" height="600" alt="Tela 1" src="https://github.com/user-attachments/assets/ae69663d-cdee-4d96-b72e-655674248594" />
-   <img width="300" height="600" alt="Tela 2" src="https://github.com/user-attachments/assets/b5720e45-dae4-4c6a-955e-e2bd621790a2" />
-   <img width="300" height="600" alt="Tela 3" src="https://github.com/user-attachments/assets/f6876a76-e821-4a28-a196-1b11e81fb884" />
+   <img width="300" height="600" alt="Tela 2" src="https://github.com/user-attachments/assets/3c06bf57-c74b-4a4f-9b02-9c85537ad05c" />
+   <img width="300" height="600" alt="Tela 3" src="https://github.com/user-attachments/assets/487ee6e4-57d7-4173-9348-dc3361570a5c" />
 </p>
 
 ## ✨ Funcionalidades
@@ -82,7 +82,7 @@ Este aplicativo foi feito a partir de uma **engenharia reversa e complementar** 
 - **Linguagem:** Kotlin  
 - **IDE:** Android Studio  
 - **API:** [brapi.dev](https://brapi.dev/)  
-- **UI Components:** Column, Row, ScrollViewState, Text, Surface, AsyncImage, IconButton, etc.  
+- **UI Components:** Column, Row, rememberScrollState, Text, Surface, AsyncImage, IconButton, etc.  
 - **Biblioteca de Imagens:** [Coil](https://coil-kt.github.io/coil/) (com suporte a SVG via `SvgDecoder`)  
 - **Design:**  
   - Fundo: Azul escuro `#1B263B`  
