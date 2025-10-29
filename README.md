@@ -82,7 +82,7 @@ Este aplicativo foi feito a partir de uma **engenharia reversa e complementar** 
 - **Linguagem:** Kotlin  
 - **IDE:** Android Studio  
 - **API:** [brapi.dev](https://brapi.dev/)  
-- **UI Components:** ConstraintLayout, LinearLayout, ScrollView, EditText, TextView, ImageView  
+- **UI Components:** Column, Row, ScrollViewState, Text, Surface, AsyncImage, IconButton, etc.  
 - **Biblioteca de Imagens:** [Coil](https://coil-kt.github.io/coil/) (com suporte a SVG via `SvgDecoder`)  
 - **Design:**  
   - Fundo: Azul escuro `#1B263B`  
@@ -94,7 +94,7 @@ Este aplicativo foi feito a partir de uma **engenharia reversa e complementar** 
 
 ## 🔧 Boas Práticas Implementadas
 - Modularização do código para facilitar manutenção  
-- Reutilização de estilos XML para TextView e EditText  
+- Reutilização de estilos XML convertidos para Jetpack Compose  
 - Input validation: só aceita tickers válidos  
 - Layout edge-to-edge para design moderno  
 - Responsivo e adaptável a diferentes tamanhos de tela  
